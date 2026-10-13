@@ -1,256 +1,272 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>午餐救星：今天吃什麼？</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Canvas Confetti 特效庫 -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <style>
-    @keyframes slotRolling {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-30px); filter: blur(2px); }
-      100% { transform: translateY(0); }
-    }
-    .slot-rolling {
-      animation: slotRolling 0.15s infinite;
-    }
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
   </style>
 </head>
-<body class="bg-gradient-to-br from-amber-50 to-orange-100 min-h-screen text-slate-800 font-sans p-4 md:p-8 flex flex-col items-center">
-
-  <div class="max-w-md w-full bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-orange-100 flex flex-col items-center">
-    
-    <!-- 標題區 -->
-    <header class="text-center mb-6">
-      <div class="text-4xl mb-2">🍱</div>
-      <h1 class="text-2xl font-black text-orange-600 tracking-wide">午餐救星：今天吃什麼？</h1>
-      <p class="text-sm text-gray-500 mt-1">拯救大學生選擇困難症，一鍵決定命運！</p>
-    </header>
-
-    <!-- 篩選條件標籤 -->
-    <div class="w-full mb-6 bg-orange-50/60 p-4 rounded-2xl border border-orange-100">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-bold text-gray-600 uppercase">預算過濾：</span>
-        <div class="space-x-1" id="budgetFilters">
-          <button onclick="setFilter('all')" class="filter-btn active text-xs px-2.5 py-1 rounded-full font-medium transition bg-orange-500 text-white" data-budget="all">全部</button>
-          <button onclick="setFilter('cheap')" class="filter-btn text-xs px-2.5 py-1 rounded-full font-medium transition bg-white text-gray-600 hover:bg-orange-100" data-budget="cheap">💰 銅板價</button>
-          <button onclick="setFilter('normal')" class="filter-btn text-xs px-2.5 py-1 rounded-full font-medium transition bg-white text-gray-600 hover:bg-orange-100" data-budget="normal">💳 平價日常</button>
-          <button onclick="setFilter('luxury')" class="filter-btn text-xs px-2.5 py-1 rounded-full font-medium transition bg-white text-gray-600 hover:bg-orange-100" data-budget="luxury">✨ 犒賞自己</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 抽籤展示卡片區 -->
-    <div class="w-full h-44 bg-gradient-to-b from-orange-500 to-amber-500 rounded-2xl p-6 flex flex-col items-center justify-center text-white shadow-inner relative overflow-hidden mb-6">
-      <div id="slotDisplay" class="text-3xl md:text-4xl font-extrabold tracking-wide text-center drop-shadow-md">
-        準備好了嗎？
-      </div>
-      <div id="slotHint" class="text-xs text-orange-100 mt-2 font-medium tracking-wider">
-        點擊下方按鈕啟動抽籤
-      </div>
-    </div>
-
-    <!-- 操作按鈕 -->
-    <div class="w-full space-y-3 mb-6">
-      <button id="drawBtn" onclick="drawLunch()" class="w-full py-4 bg-orange-500 hover:bg-orange-600 active:scale-98 transition transform text-white text-lg font-bold rounded-2xl shadow-lg shadow-orange-300 flex items-center justify-center gap-2">
-        <span>🎲</span>
-        <span id="btnText">拯救我的午餐！</span>
-      </button>
-
-      <button id="rejectBtn" onclick="drawLunch(true)" class="hidden w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold rounded-xl transition">
-        🙈 這我不行，再抽一次！
-      </button>
-    </div>
-
-    <!-- 自訂候選名單收合面板 -->
-    <div class="w-full border-t border-gray-100 pt-4">
-      <button onclick="toggleManagePanel()" class="w-full flex items-center justify-between text-xs font-semibold text-gray-500 hover:text-gray-800 transition">
-        <span>📋 編輯午餐清單 (<span id="itemCount">0</span>)</span>
-        <span id="toggleArrow">▼</span>
-      </button>
-
-      <div id="managePanel" class="mt-4 hidden">
-        <!-- 新增選項輸入框 -->
-        <div class="flex gap-2 mb-3">
-          <input type="text" id="newFoodName" placeholder="輸入食物或店家名稱..." class="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:border-orange-500">
-          <select id="newFoodBudget" class="text-xs border border-gray-200 rounded-xl px-2 py-2 bg-white">
-            <option value="cheap">銅板價</option>
-            <option value="normal" selected>平價</option>
-            <option value="luxury">大餐</option>
-          </select>
-          <button onclick="addCustomFood()" class="bg-slate-800 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-slate-700 transition">加入</button>
-        </div>
-
-        <!-- 標籤清單 -->
-        <div id="foodList" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1">
-          <!-- JS 動態渲染 -->
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <footer class="mt-8 text-xs text-gray-400 text-center">
-    Made with Vibe Coding 💡 · 不挑食才是好孩子
-  </footer>
-
-  <script>
-    // 預設大學生常見午餐選項
-    const defaultLunchList = [
-      { name: "燒臘便當", budget: "normal" },
-      { name: "學餐自助餐", budget: "cheap" },
-      { name: "乾麵配滷蛋", budget: "cheap" },
-      { name: "便利商店御飯糰", budget: "cheap" },
-      { name: "健康水煮餐盒", budget: "normal" },
-      { name: "麥當勞 1+1 / 漢堡", budget: "normal" },
-      { name: "日式拉麵", budget: "luxury" },
-      { name: "韓式豆腐鍋", budget: "normal" },
-      { name: "牛肉麵", budget: "normal" },
-      { name: "火鍋 / 麻辣燙", budget: "luxury" },
-      { name: "水餃 10 顆 + 酸辣湯", budget: "cheap" },
-      { name: "早午餐拼盤", budget: "luxury" },
-      { name: "地獄選擇：再睡十分鐘不吃了", budget: "cheap" }
-    ];
-
-    // 初始化 LocalStorage 資料
-    let lunchList = JSON.parse(localStorage.getItem('lunch_options')) || defaultLunchList;
-    let currentBudget = 'all';
-    let isRolling = false;
-    let rerollCount = 0;
-
-    const rejectJokes = [
-      "說好不挑食的呢？再給你一次機會！",
-      "這家明明很好吃！好啦幫你重抽～",
-      "再抽就要上課遲到囉！",
-      "最後一次！不准再賴皮了！"
-    ];
-
-    function saveToStorage() {
-      localStorage.setItem('lunch_options', JSON.stringify(lunchList));
-      renderFoodList();
-    }
-
-    function setFilter(budget) {
-      currentBudget = budget;
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        if(btn.dataset.budget === budget) {
-          btn.className = "filter-btn active text-xs px-2.5 py-1 rounded-full font-medium transition bg-orange-500 text-white";
-        } else {
-          btn.className = "filter-btn text-xs px-2.5 py-1 rounded-full font-medium transition bg-white text-gray-600 hover:bg-orange-100";
-        }
-      });
-    }
-
-    function getFilteredList() {
-      if (currentBudget === 'all') return lunchList;
-      return lunchList.filter(item => item.budget === currentBudget);
-    }
-
-    function drawLunch(isReject = false) {
-      if (isRolling) return;
-      const pool = getFilteredList();
-
-      if (pool.length === 0) {
-        alert("此篩選條件下沒有任何食物選項，請切換條件或新增食物！");
-        return;
-      }
-
-      isRolling = true;
-      const display = document.getElementById('slotDisplay');
-      const hint = document.getElementById('slotHint');
-      const btnText = document.getElementById('btnText');
-      const rejectBtn = document.getElementById('rejectBtn');
-
-      display.classList.add('slot-rolling');
-      btnText.innerText = "正在決定命運...";
-      rejectBtn.classList.add('hidden');
-
-      if (isReject) {
-        rerollCount++;
-        hint.innerText = rejectJokes[rerollCount % rejectJokes.length];
-      } else {
-        hint.innerText = "命運輪盤轉動中...";
-      }
-
-      let speedCounter = 0;
-      const interval = setInterval(() => {
-        const tempItem = pool[Math.floor(Math.random() * pool.length)];
-        display.innerText = tempItem.name;
-        speedCounter++;
-        if (speedCounter > 15) {
-          clearInterval(interval);
-          finishDraw(pool);
-        }
-      }, 90);
-    }
-
-    function finishDraw(pool) {
-      const finalItem = pool[Math.floor(Math.random() * pool.length)];
-      const display = document.getElementById('slotDisplay');
-      const hint = document.getElementById('slotHint');
-      const btnText = document.getElementById('btnText');
-      const rejectBtn = document.getElementById('rejectBtn');
-
-      display.classList.remove('slot-rolling');
-      display.innerText = finalItem.name;
-      hint.innerText = "🎉 命運為你選好了，就吃這個！";
-      btnText.innerText = "重新抽籤";
-      rejectBtn.classList.remove('hidden');
-      isRolling = false;
-
-      // 施放慶祝彩帶
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.65 }
-      });
-    }
-
-    function toggleManagePanel() {
-      const panel = document.getElementById('managePanel');
-      const arrow = document.getElementById('toggleArrow');
-      panel.classList.toggle('hidden');
-      arrow.innerText = panel.classList.contains('hidden') ? '▼' : '▲';
-    }
-
-    function renderFoodList() {
-      const listContainer = document.getElementById('foodList');
-      const countSpan = document.getElementById('itemCount');
-      listContainer.innerHTML = '';
-      countSpan.innerText = lunchList.length;
-
-      lunchList.forEach((item, index) => {
-        const tag = document.createElement('div');
-        tag.className = "flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-3 py-1.5 rounded-full transition";
-        tag.innerHTML = `
-          <span>${item.name}</span>
-          <button onclick="removeFood(${index})" class="text-gray-400 hover:text-red-500 font-bold ml-1">×</button>
-        `;
-        listContainer.appendChild(tag);
-      });
-    }
-
-    function addCustomFood() {
-      const nameInput = document.getElementById('newFoodName');
-      const budgetSelect = document.getElementById('newFoodBudget');
-      const name = nameInput.value.trim();
-
-      if (!name) return;
-      lunchList.push({ name, budget: budgetSelect.value });
-      saveToStorage();
-      nameInput.value = '';
-    }
-
-    function removeFood(index) {
-      lunchList.splice(index, 1);
-      saveToStorage();
-    }
-
-    // 初始化渲染
-    renderFoodList();
-  </script>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="zh-TW"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;午餐救星：今天吃什麼？&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- Tailwind CSS CDN --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- Canvas Confetti 特效庫 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>@keyframes slotRolling {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>0% { transform: translateY(0); }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>50% { transform: translateY(-30px); filter: blur(2px); }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>100% { transform: translateY(0); }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.slot-rolling {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>animation: slotRolling 0.15s infinite;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body class="bg-gradient-to-br from-amber-50 to-orange-100 min-h-screen text-slate-800 font-sans p-4 md:p-8 flex flex-col items-center"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="max-w-md w-full bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-orange-100 flex flex-col items-center"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- 標題區 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;header class="text-center mb-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="text-4xl mb-2"&gt;🍱&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;h1 class="text-2xl font-black text-orange-600 tracking-wide"&gt;午餐救星：今天吃什麼？&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;p class="text-sm text-gray-500 mt-1"&gt;拯救大學生選擇困難症，一鍵決定命運！&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/header&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- 篩選條件標籤 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="w-full mb-6 bg-orange-50/60 p-4 rounded-2xl border border-orange-100"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="flex items-center justify-between mb-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span class="text-xs font-bold text-gray-600 uppercase"&gt;預算過濾：&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="space-x-1" id="budgetFilters"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button onclick="setFilter('all')" class="filter-btn active text-xs px-2.5 py-1 rounded-full font-medium transition bg-orange-500 text-white" data-budget="all"&gt;全部&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button onclick="setFilter('cheap')" class="filter-btn text-xs px-2.5 py-1 rounded-full font-medium transition bg-white text-gray-600 hover:bg-orange-100" data-budget="cheap"&gt;💰 銅板價&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button onclick="setFilter('normal')" class="filter-btn text-xs px-2.5 py-1 rounded-full font-medium transition bg-white text-gray-600 hover:bg-orange-100" data-budget="normal"&gt;💳 平價日常&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button onclick="setFilter('luxury')" class="filter-btn text-xs px-2.5 py-1 rounded-full font-medium transition bg-white text-gray-600 hover:bg-orange-100" data-budget="luxury"&gt;✨ 犒賞自己&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- 抽籤展示卡片區 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="w-full h-44 bg-gradient-to-b from-orange-500 to-amber-500 rounded-2xl p-6 flex flex-col items-center justify-center text-white shadow-inner relative overflow-hidden mb-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="slotDisplay" class="text-3xl md:text-4xl font-extrabold tracking-wide text-center drop-shadow-md"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>準備好了嗎？</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="slotHint" class="text-xs text-orange-100 mt-2 font-medium tracking-wider"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>點擊下方按鈕啟動抽籤</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- 操作按鈕 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="w-full space-y-3 mb-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button id="drawBtn" onclick="drawLunch()" class="w-full py-4 bg-orange-500 hover:bg-orange-600 active:scale-98 transition transform text-white text-lg font-bold rounded-2xl shadow-lg shadow-orange-300 flex items-center justify-center gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span&gt;🎲&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span id="btnText"&gt;拯救我的午餐！&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/button&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button id="rejectBtn" onclick="drawLunch(true)" class="hidden w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold rounded-xl transition"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>🙈 這我不行，再抽一次！</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- 自訂候選名單收合面板 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="w-full border-t border-gray-100 pt-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button onclick="toggleManagePanel()" class="w-full flex items-center justify-between text-xs font-semibold text-gray-500 hover:text-gray-800 transition"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span&gt;📋 編輯午餐清單 (&lt;span id="itemCount"&gt;0&lt;/span&gt;)&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span id="toggleArrow"&gt;▼&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/button&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="managePanel" class="mt-4 hidden"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- 新增選項輸入框 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="flex gap-2 mb-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;input type="text" id="newFoodName" placeholder="輸入食物或店家名稱..." class="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:border-orange-500"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;select id="newFoodBudget" class="text-xs border border-gray-200 rounded-xl px-2 py-2 bg-white"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="cheap"&gt;銅板價&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="normal" selected&gt;平價&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="luxury"&gt;大餐&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button onclick="addCustomFood()" class="bg-slate-800 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-slate-700 transition"&gt;加入&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- 標籤清單 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="foodList" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;!-- JS 動態渲染 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;footer class="mt-8 text-xs text-gray-400 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>Made with Vibe Coding 💡 · 不挑食才是好孩子</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/footer&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 預設大學生常見午餐選項</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const defaultLunchList = [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "燒臘便當", budget: "normal" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "學餐自助餐", budget: "cheap" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "乾麵配滷蛋", budget: "cheap" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "便利商店御飯糰", budget: "cheap" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "健康水煮餐盒", budget: "normal" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "麥當勞 1+1 / 漢堡", budget: "normal" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "日式拉麵", budget: "luxury" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "韓式豆腐鍋", budget: "normal" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "牛肉麵", budget: "normal" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "火鍋 / 麻辣燙", budget: "luxury" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "水餃 10 顆 + 酸辣湯", budget: "cheap" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "早午餐拼盤", budget: "luxury" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "地獄選擇：再睡十分鐘不吃了", budget: "cheap" }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 初始化 LocalStorage 資料</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let lunchList = JSON.parse(localStorage.getItem('lunch_options')) || defaultLunchList;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let currentBudget = 'all';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let isRolling = false;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let rerollCount = 0;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const rejectJokes = [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"說好不挑食的呢？再給你一次機會！",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"這家明明很好吃！好啦幫你重抽～",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"再抽就要上課遲到囉！",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"最後一次！不准再賴皮了！"</p>
+<p class="p1"><span class="Apple-converted-space">    </span>];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function saveToStorage() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>localStorage.setItem('lunch_options', JSON.stringify(lunchList));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>renderFoodList();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function setFilter(budget) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>currentBudget = budget;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.querySelectorAll('.filter-btn').forEach(btn =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(btn.dataset.budget === budget) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>btn.className = "filter-btn active text-xs px-2.5 py-1 rounded-full font-medium transition bg-orange-500 text-white";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>btn.className = "filter-btn text-xs px-2.5 py-1 rounded-full font-medium transition bg-white text-gray-600 hover:bg-orange-100";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function getFilteredList() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (currentBudget === 'all') return lunchList;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return lunchList.filter(item =&gt; item.budget === currentBudget);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function drawLunch(isReject = false) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (isRolling) return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const pool = getFilteredList();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (pool.length === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>alert("此篩選條件下沒有任何食物選項，請切換條件或新增食物！");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>isRolling = true;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const display = document.getElementById('slotDisplay');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const hint = document.getElementById('slotHint');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const btnText = document.getElementById('btnText');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const rejectBtn = document.getElementById('rejectBtn');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>display.classList.add('slot-rolling');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>btnText.innerText = "正在決定命運...";</p>
+<p class="p1"><span class="Apple-converted-space">      </span>rejectBtn.classList.add('hidden');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (isReject) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>rerollCount++;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>hint.innerText = rejectJokes[rerollCount % rejectJokes.length];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>hint.innerText = "命運輪盤轉動中...";</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>let speedCounter = 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const interval = setInterval(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const tempItem = pool[Math.floor(Math.random() * pool.length)];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>display.innerText = tempItem.name;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>speedCounter++;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (speedCounter &gt; 15) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>clearInterval(interval);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>finishDraw(pool);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}, 90);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function finishDraw(pool) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const finalItem = pool[Math.floor(Math.random() * pool.length)];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const display = document.getElementById('slotDisplay');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const hint = document.getElementById('slotHint');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const btnText = document.getElementById('btnText');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const rejectBtn = document.getElementById('rejectBtn');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>display.classList.remove('slot-rolling');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>display.innerText = finalItem.name;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>hint.innerText = "🎉 命運為你選好了，就吃這個！";</p>
+<p class="p1"><span class="Apple-converted-space">      </span>btnText.innerText = "重新抽籤";</p>
+<p class="p1"><span class="Apple-converted-space">      </span>rejectBtn.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>isRolling = false;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 施放慶祝彩帶</p>
+<p class="p1"><span class="Apple-converted-space">      </span>confetti({</p>
+<p class="p1"><span class="Apple-converted-space">        </span>particleCount: 50,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>spread: 60,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>origin: { y: 0.65 }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function toggleManagePanel() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const panel = document.getElementById('managePanel');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const arrow = document.getElementById('toggleArrow');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>panel.classList.toggle('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>arrow.innerText = panel.classList.contains('hidden') ? '▼' : '▲';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function renderFoodList() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const listContainer = document.getElementById('foodList');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const countSpan = document.getElementById('itemCount');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>listContainer.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>countSpan.innerText = lunchList.length;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>lunchList.forEach((item, index) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const tag = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tag.className = "flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-3 py-1.5 rounded-full transition";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tag.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span&gt;${item.name}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button onclick="removeFood(${index})" class="text-gray-400 hover:text-red-500 font-bold ml-1"&gt;×&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>listContainer.appendChild(tag);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function addCustomFood() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const nameInput = document.getElementById('newFoodName');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const budgetSelect = document.getElementById('newFoodBudget');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const name = nameInput.value.trim();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!name) return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>lunchList.push({ name, budget: budgetSelect.value });</p>
+<p class="p1"><span class="Apple-converted-space">      </span>saveToStorage();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>nameInput.value = '';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function removeFood(index) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>lunchList.splice(index, 1);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>saveToStorage();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 初始化渲染</p>
+<p class="p1"><span class="Apple-converted-space">    </span>renderFoodList();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
 </body>
 </html>
