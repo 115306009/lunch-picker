@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>午餐救星：今天吃什麼？</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti 特效庫 -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    @keyframes slotRolling {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-30px); filter: blur(2px); }
+      100% { transform: translateY(0); }
+    }
+    .slot-rolling {
+      animation: slotRolling 0.15s infinite;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-amber-50 to-orange-100 min-h-screen text-slate-800 font-sans p-4 md:p-8 flex flex-col items-center">
+
+  <div class="max-w-md w-full bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-orange-100 flex flex-col items-center">
+    
+    <!-- 標題區 -->
+    <header class="text-center mb-6">
+      <div class="text-4xl mb-2">🍱</div>
+      <h1 class="text-2xl font-black text-orange-600 tracking-wide">午餐救星：今天吃什麼？</h1>
+      <p class="text-sm text-gray-500 mt-1">拯救大學生選擇困難症，一鍵決定命運！</p>
+    </header>
+
+    <!-- 篩選條件標籤 -->
+    <div class="w-full mb-6 bg-orange-50/60 p-4 rounded-2xl border border-orange-100">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-bold text-gray-600 uppercase">預算過濾：</span>
+        <div class="space-x-1" id="budgetFilters">
+          <button onclick="setFilter('all')" class="filter-btn active text-xs px-2.5 py-1 rounded-full font-medium transition bg-orange-500 text-white" data-budget="all">全部</button>
+          <button onclick="setFilter('cheap')" class="filter-btn text-xs px-2.5 py-1 rounded-full font-medium transition bg-white text-gray-600 hover:bg-orange-100" data-budget="cheap">💰 銅板價</button>
+          <button onclick="setFilter('normal')" class="filter-btn text-xs px-2.5 py-1 rounded-full font-medium transition bg-white text-gray-600 hover:bg-orange-100" data-budget="normal">💳 平價日常</button>
+          <button onclick="setFilter('luxury')" class="filter-btn text-xs px-2.5 py-1 rounded-full font-medium transition bg-white text-gray-600 hover:bg-orange-100" data-budget="luxury">✨ 犒賞自己</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 抽籤展示卡片區 -->
+    <div class="w-full h-44 bg-gradient-to-b from-orange-500 to-amber-500 rounded-2xl p-6 flex flex-col items-center justify-center text-white shadow-inner relative overflow-hidden mb-6">
+      <div id="slotDisplay" class="text-3xl md:text-4xl font-extrabold tracking-wide text-center drop-shadow-md">
+        準備好了嗎？
+      </div>
+      <div id="slotHint" class="text-xs text-orange-100 mt-2 font-medium tracking-wider">
+        點擊下方按鈕啟動抽籤
+      </div>
+    </div>
+
+    <!-- 操作按鈕 -->
+    <div class="w-full space-y-3 mb-6">
+      <button id="drawBtn" onclick="drawLunch()" class="w-full py-4 bg-orange-500 hover:bg-orange-600 active:scale-98 transition transform text-white text-lg font-bold rounded-2xl shadow-lg shadow-orange-300 flex items-center justify-center gap-2">
+        <span>🎲</span>
+        <span id="btnText">拯救我的午餐！</span>
+      </button>
+
+      <button id="rejectBtn" onclick="drawLunch(true)" class="hidden w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold rounded-xl transition">
+        🙈 這我不行，再抽一次！
+      </button>
+    </div>
+
+    <!-- 自訂候選名單收合面板 -->
+    <div class="w-full border-t border-gray-100 pt-4">
+      <button onclick="toggleManagePanel()" class="w-full flex items-center justify-between text-xs font-semibold text-gray-500 hover:text-gray-800 transition">
+        <span>📋 編輯午餐清單 (<span id="itemCount">0</span>)</span>
+        <span id="toggleArrow">▼</span>
+      </button>
+
+      <div id="managePanel" class="mt-4 hidden">
+        <!-- 新增選項輸入框 -->
+        <div class="flex gap-2 mb-3">
+          <input type="text" id="newFoodName" placeholder="輸入食物或店家名稱..." class="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:border-orange-500">
+          <select id="newFoodBudget" class="text-xs border border-gray-200 rounded-xl px-2 py-2 bg-white">
+            <option value="cheap">銅板價</option>
+            <option value="normal" selected>平價</option>
+            <option value="luxury">大餐</option>
+          </select>
+          <button onclick="addCustomFood()" class="bg-slate-800 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-slate-700 transition">加入</button>
+        </div>
+
+        <!-- 標籤清單 -->
+        <div id="foodList" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1">
+          <!-- JS 動態渲染 -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="mt-8 text-xs text-gray-400 text-center">
+    Made with Vibe Coding 💡 · 不挑食才是好孩子
+  </footer>
+
+  <script>
+    // 預設大學生常見午餐選項
+    const defaultLunchList = [
+      { name: "燒臘便當", budget: "normal" },
+      { name: "學餐自助餐", budget: "cheap" },
+      { name: "乾麵配滷蛋", budget: "cheap" },
+      { name: "便利商店御飯糰", budget: "cheap" },
+      { name: "健康水煮餐盒", budget: "normal" },
+      { name: "麥當勞 1+1 / 漢堡", budget: "normal" },
+      { name: "日式拉麵", budget: "luxury" },
+      { name: "韓式豆腐鍋", budget: "normal" },
+      { name: "牛肉麵", budget: "normal" },
+      { name: "火鍋 / 麻辣燙", budget: "luxury" },
+      { name: "水餃 10 顆 + 酸辣湯", budget: "cheap" },
+      { name: "早午餐拼盤", budget: "luxury" },
+      { name: "地獄選擇：再睡十分鐘不吃了", budget: "cheap" }
+    ];
+
+    // 初始化 LocalStorage 資料
+    let lunchList = JSON.parse(localStorage.getItem('lunch_options')) || defaultLunchList;
+    let currentBudget = 'all';
+    let isRolling = false;
+    let rerollCount = 0;
+
+    const rejectJokes = [
+      "說好不挑食的呢？再給你一次機會！",
+      "這家明明很好吃！好啦幫你重抽～",
+      "再抽就要上課遲到囉！",
+      "最後一次！不准再賴皮了！"
+    ];
+
+    function saveToStorage() {
+      localStorage.setItem('lunch_options', JSON.stringify(lunchList));
+      renderFoodList();
+    }
+
+    function setFilter(budget) {
+      currentBudget = budget;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        if(btn.dataset.budget === budget) {
+          btn.className = "filter-btn active text-xs px-2.5 py-1 rounded-full font-medium transition bg-orange-500 text-white";
+        } else {
+          btn.className = "filter-btn text-xs px-2.5 py-1 rounded-full font-medium transition bg-white text-gray-600 hover:bg-orange-100";
+        }
+      });
+    }
+
+    function getFilteredList() {
+      if (currentBudget === 'all') return lunchList;
+      return lunchList.filter(item => item.budget === currentBudget);
+    }
+
+    function drawLunch(isReject = false) {
+      if (isRolling) return;
+      const pool = getFilteredList();
+
+      if (pool.length === 0) {
+        alert("此篩選條件下沒有任何食物選項，請切換條件或新增食物！");
+        return;
+      }
+
+      isRolling = true;
+      const display = document.getElementById('slotDisplay');
+      const hint = document.getElementById('slotHint');
+      const btnText = document.getElementById('btnText');
+      const rejectBtn = document.getElementById('rejectBtn');
+
+      display.classList.add('slot-rolling');
+      btnText.innerText = "正在決定命運...";
+      rejectBtn.classList.add('hidden');
+
+      if (isReject) {
+        rerollCount++;
+        hint.innerText = rejectJokes[rerollCount % rejectJokes.length];
+      } else {
+        hint.innerText = "命運輪盤轉動中...";
+      }
+
+      let speedCounter = 0;
+      const interval = setInterval(() => {
+        const tempItem = pool[Math.floor(Math.random() * pool.length)];
+        display.innerText = tempItem.name;
+        speedCounter++;
+        if (speedCounter > 15) {
+          clearInterval(interval);
+          finishDraw(pool);
+        }
+      }, 90);
+    }
+
+    function finishDraw(pool) {
+      const finalItem = pool[Math.floor(Math.random() * pool.length)];
+      const display = document.getElementById('slotDisplay');
+      const hint = document.getElementById('slotHint');
+      const btnText = document.getElementById('btnText');
+      const rejectBtn = document.getElementById('rejectBtn');
+
+      display.classList.remove('slot-rolling');
+      display.innerText = finalItem.name;
+      hint.innerText = "🎉 命運為你選好了，就吃這個！";
+      btnText.innerText = "重新抽籤";
+      rejectBtn.classList.remove('hidden');
+      isRolling = false;
+
+      // 施放慶祝彩帶
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.65 }
+      });
+    }
+
+    function toggleManagePanel() {
+      const panel = document.getElementById('managePanel');
+      const arrow = document.getElementById('toggleArrow');
+      panel.classList.toggle('hidden');
+      arrow.innerText = panel.classList.contains('hidden') ? '▼' : '▲';
+    }
+
+    function renderFoodList() {
+      const listContainer = document.getElementById('foodList');
+      const countSpan = document.getElementById('itemCount');
+      listContainer.innerHTML = '';
+      countSpan.innerText = lunchList.length;
+
+      lunchList.forEach((item, index) => {
+        const tag = document.createElement('div');
+        tag.className = "flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-3 py-1.5 rounded-full transition";
+        tag.innerHTML = `
+          <span>${item.name}</span>
+          <button onclick="removeFood(${index})" class="text-gray-400 hover:text-red-500 font-bold ml-1">×</button>
+        `;
+        listContainer.appendChild(tag);
+      });
+    }
+
+    function addCustomFood() {
+      const nameInput = document.getElementById('newFoodName');
+      const budgetSelect = document.getElementById('newFoodBudget');
+      const name = nameInput.value.trim();
+
+      if (!name) return;
+      lunchList.push({ name, budget: budgetSelect.value });
+      saveToStorage();
+      nameInput.value = '';
+    }
+
+    function removeFood(index) {
+      lunchList.splice(index, 1);
+      saveToStorage();
+    }
+
+    // 初始化渲染
+    renderFoodList();
+  </script>
+</body>
+</html>
